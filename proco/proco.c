@@ -29,7 +29,6 @@ void* consume(){
     unlock(&ctr_m_c);
     if(cell>1024){
       sem_post(&can_consume); //unlock everything
-      sem_post(&can_produce);
       break;
     }
 
@@ -50,7 +49,7 @@ void* produce(){
 
     sem_wait(&can_produce);
     lock(&ctr_m_p);
-      cell=ctr_p++;;
+      cell=ctr_p++;
     unlock(&ctr_m_p);
     if(cell>1024){
       sem_post(&can_produce); //unlock everything
