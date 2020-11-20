@@ -19,22 +19,18 @@ sem_t can_produce;
 void lock(pthread_mutex_t *a){pthread_mutex_lock(a);}
 void unlock(pthread_mutex_t *a){pthread_mutex_unlock(a);}
 
-void* consume(){
+void* consume(void *m){
+  int a = *((int*)m);
 
-  while(1){
+  for(int i=0;i<a;i++){
     int cell;
 
     sem_wait(&can_consume);
     lock(&ctr_m_c);
       cell=ctr_c++;
-    if(cell>1024){
-      sem_post(&can_consume); //unlock everything
-      unlock(&ctr_m_c);
-      break;
-    }
 
-    BUF[cell%BUFSIZE]=0;
-    sem_post(&can_produce);
+      BUF[cell%BUFSIZE]=0;
+      sem_post(&can_produce);
     unlock(&ctr_m_c);
     while(rand() > RAND_MAX/10000);
   }
@@ -42,9 +38,11 @@ void* consume(){
   return NULL;
 }
 
-void* produce(){
+void* produce(void *m){
 
-  while(1){
+  int a = *((int*)m);
+
+  for(int i=0;i<a;i++){
     int cell;
 
     sem_wait(&can_produce);
@@ -53,16 +51,9 @@ void* produce(){
     lock(&ctr_m_p);
       cell=ctr_p++;
 
-    if(cell>1024){
-      sem_post(&can_produce); //unlock everything
+      //if(BUF[cell%8]!=0)printf("WARN-collision occured.");
+      BUF[cell%BUFSIZE]=rand();
       sem_post(&can_consume);
-      unlock(&ctr_m_p);
-      break;
-    }
-
-    //if(BUF[cell%8]!=0)printf("WARN-collision occured.");
-    BUF[cell%BUFSIZE]=rand();
-    sem_post(&can_consume);
     unlock(&ctr_m_p);
 
   }
@@ -77,9 +68,7 @@ int main(int argc, char **argv){
   {
       if(opt=='P')nb_pro=atoi(optarg);
       else if(opt=='C')nb_con=atoi(optarg);
-      //else printf("unknown option: %c\n", optopt);
   }
-  //printf("Running with %d producers and %d consumers.\n",nb_pro,nb_con);
 
   if(nb_pro+nb_con<=1){return 0;} // time is infinite in this case
 
@@ -90,10 +79,14 @@ int main(int argc, char **argv){
   sem_init(&can_consume, 0 , 0);
 
   for(int i=0;i<nb_pro;i++){
-    pthread_create(pro+i,NULL,&produce,NULL);
+    int *k = malloc(sizeof(int));
+    *(k) = 1024/nb_pro+(i==nb_pro-1?1024%nb_pro:0);
+    pthread_create(pro+i,NULL,&produce,k);
   }
   for(int i=0;i<nb_con;i++){
-    pthread_create(con+i,NULL,&consume,NULL);
+    int *k = malloc(sizeof(int));
+    *(k) = 1024/nb_con+(i==nb_con-1?1024%nb_con:0);
+    pthread_create(con+i,NULL,&consume,k);
   }
 
   for(int i=0;i<nb_pro;i++){

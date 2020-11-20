@@ -52,7 +52,7 @@ do
   C=$(($i/2+$i%2))
   for k in {1..5}
   do
-    VAR=$( { time ./reawri/reawri; } 2>&1 )
+    VAR=$( { time ./reawri/reawri -W $P -R $C;} 2>&1 )
     echo -n ","${VAR} >> reawri.csv
   done
   echo "">>reawri.csv

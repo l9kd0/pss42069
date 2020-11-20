@@ -4,141 +4,98 @@
 #include <semaphore.h>
 #include <stdio.h>
 
-// Declaring simulations functions
-void prepare_data(){};
-void write_database(){};
-void process_data(){};
-void read_database(){};
+void lock(pthread_mutex_t *a){pthread_mutex_lock(a);}
+void unlock(pthread_mutex_t *a){pthread_mutex_unlock(a);}
+void wait(sem_t *a){sem_wait(a);}
+void post(sem_t *a){sem_post(a);}
 
-// Variables
-pthread_mutex_t mutex_readcount;  // protège readcount
-pthread_mutex_t mutex_writecount; // protège writecount
-pthread_mutex_t mutex_z;
-sem_t sem_read;
-sem_t sem_write;
-int readcount = 0; // nombre de readers
-int writecount = 0;
-int nb_pro = 8, nb_con = 8;
-pthread_t *pro;
-pthread_t *con;
+pthread_mutex_t wc,rc,z;
+sem_t data, green;
+int nbr=0,nbw=0,r_threads,w_threads;
 
-// Writer code
-void *writer(void *t)
-{
-  while (1)
-  {
-    prepare_data(); // Simulation
+pthread_t *r,*w;
 
-    pthread_mutex_lock(&mutex_writecount); // Locking in order to change number of writers
-    writecount++;
-    if (writecount == 1)
-    {
-      sem_wait(&sem_read);
-    }
-    pthread_mutex_unlock(&mutex_writecount);
 
-    sem_wait(&sem_write); // Waiting
+void *writer(void *m){
+  int a = *((int*)m);
+  for(int i=0;i<a;i++){
 
-    write_database(); // Critical section
+      lock(&wc);
+        if(++nbw==1)wait(&green);// Waiting green lights
+      unlock(&wc);
 
-    sem_post(&sem_write); // Freeing
+      wait(&data);
+        while(rand() > RAND_MAX/10000); // Writing
+      post(&data);
 
-    pthread_mutex_lock(&mutex_writecount); // Changing number of writers
-    writecount--;
-    if (writecount == 0)
-    {
-      sem_post(&sem_read);
-    }
-    pthread_mutex_unlock(&mutex_writecount); // Leaving
+      lock(&wc);
+        if(--nbw==0)post(&green);// All pending writers are done, green lights on
+      unlock(&wc);
   }
-  return 0;
+  return NULL;
 }
 
-// Reader code
-void *reader(void *t)
-{
-  while (1)
-  {
-    pthread_mutex_lock(&mutex_z);
-    sem_wait(&sem_read);
+void *reader(void *m){
+  int a = *((int*)m);
+  for(int i=0;i<a;i++){
 
-    pthread_mutex_lock(&mutex_readcount); // Locking in order to change number of readers
-    // section critique
-    readcount++;
-    if (readcount == 1)
-    { // arrivée du premier reader
-      sem_wait(&sem_write);
-    }
-    pthread_mutex_unlock(&mutex_readcount); // Unlocking
+      lock(&z);
+        wait(&green);// Waiting for green lights
+        lock(&rc);
+          if(++nbr==1)wait(&data);// Waiting end of writing
+        unlock(&rc);
+        post(&green);// Sending green lights for any reader (and any writer if last reader)
+      unlock(&z);
 
-    sem_post(&sem_read);
-    pthread_mutex_unlock(&mutex_z);
+        while(rand() > RAND_MAX/10000); // Accessing
 
-    read_database(); // Critical section (not really)
+      lock(&rc);
+        if(--nbr==0)post(&data);// Allowing writing again
+      unlock(&rc);
 
-    pthread_mutex_lock(&mutex_readcount); // Locking in order to change number of readers
-    // section critique
-    readcount--;
-    if (readcount == 0)
-    { // départ du dernier reader
-      sem_post(&sem_write);
-    }
-    pthread_mutex_unlock(&mutex_readcount); // On libère les mutex
-    process_data();                         // Processing data at the end
   }
-  return 0;
+  return NULL;
 }
 
-int main(int argc, char **argv)
-{
-
+int main(int argc, char **argv){
   int opt;
 
-  // Getting args
-  while ((opt = getopt(argc, argv, "P:C:")) != -1)
+  while((opt = getopt(argc, argv, "R:W:")) != -1)
   {
-    if (opt == 'P')
-      nb_pro = atoi(optarg);
-    else if (opt == 'C')
-      nb_con = atoi(optarg);
-    //else printf("unknown option: %c\n", optopt); // DEBUG
-  }
-  //printf("Running with %d producers and %d consumers.\n",nb_pro,nb_con); // DEBUG
+      if(opt=='R')r_threads=atoi(optarg);
+      else if(opt=='W')w_threads=atoi(optarg);
 
-  // Checking if args are correct
-  if (nb_pro + nb_con <= 1)
-  {
-    return 0;
-  } // time is infinite in this case
-
-  // Allocating memory
-  pro = malloc(nb_pro * sizeof(pthread_t));
-  con = malloc(nb_con * sizeof(pthread_t));
-
-  // init sem
-  sem_init(&sem_read, 0, 1);
-  sem_init(&sem_write, 0, 1);
-
-  // Creating threads
-  for (int i = 0; i < nb_pro; i++)
-  {
-    pthread_create(pro + i, NULL, &writer, NULL);
-  }
-  for (int i = 0; i < nb_con; i++)
-  {
-    pthread_create(con + i, NULL, &reader, NULL);
   }
 
-  // Joining threads
-  for (int i = 0; i < nb_pro; i++)
-  {
-    pthread_join(pro[i], NULL);
+  r = (pthread_t*)malloc(r_threads*sizeof(pthread_t));
+  w = (pthread_t*)malloc(w_threads*sizeof(pthread_t));
+
+  sem_init(&data, 0 , 1);
+  sem_init(&green, 0 , 1);
+
+  for(int i=0;i<w_threads;i++){
+
+    int *k = malloc(sizeof(int));
+    *(k) = 640/w_threads+(i==w_threads-1?640%w_threads:0);
+    pthread_create(w,NULL,&writer,k);
+
   }
 
-  for (int i = 0; i < nb_con; i++)
-  {
-    pthread_join(con[i], NULL);
+
+  for(int i=0;i<r_threads;i++){
+    int *k = malloc(sizeof(int));
+    *(k) = 640/w_threads+(i==r_threads-1?2560%r_threads:0);
+    pthread_create(r,NULL,&reader,k);
   }
+
+  for(int i=0;i<w_threads;i++){
+    pthread_join(w[i],NULL);
+  }
+
+  for(int i=0;i<r_threads;i++){
+    pthread_join(r[i],NULL);
+  }
+
 
   return 0;
 }
