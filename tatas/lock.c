@@ -4,22 +4,31 @@ int lock_m = 0;
 
 void lock() {
 
-    // Getting result of test and lock
+    // Try test and set
+    while(test_and_set()) {
+        
+        // Wait until lock_m is 0
+        while (lock_m) {}
+    }
+
+    // Now free to execute -->
+
+    return;
+}
+
+int test_and_set() {
+
     int res = 0;
 
     // Calling testandlock
     asm ("movl $1, %%eax\n"
         "xchgl %%eax, %0\n"
-        :"=r"(res)
+        :"=g"(res)
         :"m" (lock_m)
         :"eax"
     );
 
-    // If res not 0 (not free) attempt again
-    if (res != 0)
-        lock();
-
-    return;
+    return res;
 }
 
 void unlock() {

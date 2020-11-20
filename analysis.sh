@@ -75,3 +75,21 @@ do
   done
   echo "">>testandset.csv
 done
+
+#########################
+# Hamburgers (test-and-test-and-set)
+#########################
+
+echo "N,t1,t2,t3,t4,t5" > tatas.csv
+
+for i in $(seq 1 $N)
+do
+  echo -n $i >> tatas.csv
+  P=$(($i/2))
+  for k in {1..5}
+  do
+    VAR=$( { time ./tatas/tatas -P $P } 2>&1 )
+    echo -n ","${VAR} >> tatas.csv
+  done
+  echo "">>tatas.csv
+done

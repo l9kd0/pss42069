@@ -9,10 +9,10 @@
 
 // Number of threads
 int NB_THREADS = 0;
-pthread_t* piz;
+pthread_t* ham;
 
 // Make some pizza
-void* pizzaiolo(){
+void* mcdonald(){
 
     for(int i = 0; i < floor(NBSC / NB_THREADS); i++){
         lock(); // Locking 
@@ -35,29 +35,24 @@ int main(int argc, char **argv){
     }
 
     // Debug
-    printf("Making %d pizzas with %d pizzaiolos.\n", NBSC, NB_THREADS);
+    printf("Making %d hamburgers with %d mcdonalds.\n", NBSC, NB_THREADS);
 
-    lock();
+    printf("debug %d", test_and_set());
+    //unlock();
 
-    printf("lockm %d:\n", lock_m);
-
-    unlock();
-
-    printf("lockm %d:\n", lock_m);
-
-    return 0;
+    return 0; /////// BUGGED FIX SEG FAULT FIRST
 
     // Allocating memory
-    piz = malloc(NB_THREADS*sizeof(pthread_t));
+    ham = malloc(NB_THREADS*sizeof(pthread_t));
 
     // Creating threads
     for(int i=0;i<NB_THREADS;i++){
-        pthread_create(piz+i,NULL,&pizzaiolo,NULL);
+        pthread_create(ham+i,NULL,&mcdonald,NULL);
     }
 
     // Joining threads
     for(int i=0;i<NB_THREADS;i++){
-        pthread_join(piz[i],NULL);
+        pthread_join(ham[i],NULL);
     }
 
     return 0;
