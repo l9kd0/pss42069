@@ -4,8 +4,9 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <unistd.h>
+#define BUFSIZE 12
 
-int BUF[8]={0,0,0,0,0,0,0,0};
+int BUF[BUFSIZE]={0,0,0,0,0,0,0,0,0,0,0,0};
 int ctr_c=0,ctr_p=0;
 int nb_pro=8, nb_con=8;
 pthread_mutex_t ctr_m_p, ctr_m_c;
@@ -26,17 +27,16 @@ void* consume(){
     sem_wait(&can_consume);
     lock(&ctr_m_c);
       cell=ctr_c++;
-    unlock(&ctr_m_c);
     if(cell>1024){
       sem_post(&can_consume); //unlock everything
+      unlock(&ctr_m_c);
       break;
     }
 
-    BUF[cell%8]=0;
-
-    while(rand() > RAND_MAX/10000);
-
+    BUF[cell%BUFSIZE]=0;
     sem_post(&can_produce);
+    unlock(&ctr_m_c);
+    while(rand() > RAND_MAX/10000);
   }
 
   return NULL;
@@ -48,21 +48,22 @@ void* produce(){
     int cell;
 
     sem_wait(&can_produce);
+    while(rand() > RAND_MAX/10000);
+
     lock(&ctr_m_p);
       cell=ctr_p++;
-    unlock(&ctr_m_p);
+
     if(cell>1024){
       sem_post(&can_produce); //unlock everything
       sem_post(&can_consume);
+      unlock(&ctr_m_p);
       break;
     }
 
     //if(BUF[cell%8]!=0)printf("WARN-collision occured.");
-    BUF[cell%8]=rand();
-
-    while(rand() > RAND_MAX/10000);
-
+    BUF[cell%BUFSIZE]=rand();
     sem_post(&can_consume);
+    unlock(&ctr_m_p);
 
   }
 
