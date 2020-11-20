@@ -1,27 +1,24 @@
 #include "lock.h"
 
-void init_lock() {
-    __asm__("lockt:\n\t.long 0":::); // Defining lock
-
-    __asm__("testandsetlock:\n\t"               // Defining main loop
-            "movl $1, %%eax\n\t"
-            "xchgl %%eax, (lockt)\n\t"           // trying to set value to 1
-            "testl %%eax, %%eax\n\t"            // if not 0 means lock was not free
-            "jnz testandsetlock\n\t":::
-    );
-
-    __asm__("unlockt:\n\t" // Defining unlock loop
-        "movl $0, %%eax\n\t"
-        "xchgl %%eax, (lockt)\n\t":::);
-
-    // TODO check if asm is not removed because of no output registers involved 
-    //(gcc might consider the asm as useless and remove it)
-}
+// Defining lock
+int lock_m = 0;
 
 void lock() {
 
+    // Getting result of test and lock
+    int res = 0;
+
     // Calling testandlock
-    __asm__("jmp testandsetlock");
+    asm ("movl $1, %%eax\n"
+        "xchgl %%eax, %0\n"
+        :"=r"(res)
+        :"m" (lock_m)
+        :"eax"
+    );
+
+    // If res not 0 (not free) attempt again
+    if (res != 0)
+        lock();
 
     return;
 }
@@ -29,7 +26,11 @@ void lock() {
 void unlock() {
 
     // Calling unlock
-    __asm__("jmp unlock");
+    asm("movl $0, %%eax\n" // Setting 0 to eax
+        "xchgl %%eax, %0\n" // Setting lock_m to 0 (freeing)
+        :
+        :"m" (lock_m)
+        :"eax");
 
     return;
 }

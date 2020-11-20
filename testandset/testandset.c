@@ -37,11 +37,6 @@ int main(int argc, char **argv){
     // Debug
     printf("Making %d pizzas with %d pizzaiolos.\n", NBSC, NB_THREADS);
 
-    // Init lock
-    init_lock();
-
-    printf("test");
-
     // Allocating memory
     piz = malloc(NB_THREADS*sizeof(pthread_t));
 
