@@ -1,25 +1,14 @@
 #include "lock.h"
-#include "time.h"
 
 int lock_m = 0;
 
 void lock() {
 
-    long wait_time = 10;
-
-    struct timespec ts = {
-        0, wait_time
-    };
-
     // Try test and set
     while(test_and_set()) {
         
         // Wait until lock_m is 0
-        while (lock_m) {
-            nanosleep(&ts, &ts);
-            wait_time *= 2;
-            ts.tv_nsec = wait_time;
-        }
+        while (lock_m) {}
     }
 
     // Now free to execute -->
