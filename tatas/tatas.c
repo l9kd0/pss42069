@@ -43,8 +43,6 @@ int main(int argc, char **argv){
     // Debug
     //printf("Making %d hamburgers with %d mcdonalds.\n", NBSC, NB_THREADS);
 
-    //return 0; /////// BUGGED FIX SEG FAULT FIRST
-
     // Allocating memory
     ham = malloc(NB_THREADS*sizeof(pthread_t));
 
