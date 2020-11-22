@@ -1,11 +1,17 @@
-#include "lock.h"
+#ifdef BACKOFF
+  #include "b_lock.h"
+#endif
+
+#ifndef BACKOFF
+  #include "lock.h"
+#endif
+
 #include <stdlib.h>
 #include <getopt.h>
 #include <pthread.h>
-#include <math.h>
 #include <stdio.h>
 
-#define NBSC 6400 // Defining total number of "sections critiques"
+#define NBSC 6400 // Defining total number of critical sections
 
 // Number of threads
 int NB_THREADS = 0;
@@ -14,8 +20,8 @@ pthread_t* ham;
 // Make some pizza
 void* mcdonald(){
 
-    for(int i = 0; i < floor(NBSC / NB_THREADS); i++){
-        lock(); // Locking 
+    for(int i = 0; i < NBSC / NB_THREADS; i++){
+        lock(); // Locking
 
         while(rand() > RAND_MAX/10000);
 
@@ -35,12 +41,9 @@ int main(int argc, char **argv){
     }
 
     // Debug
-    printf("Making %d hamburgers with %d mcdonalds.\n", NBSC, NB_THREADS);
+    //printf("Making %d hamburgers with %d mcdonalds.\n", NBSC, NB_THREADS);
 
-    printf("debug %d", test_and_set());
-    //unlock();
-
-    return 0; /////// BUGGED FIX SEG FAULT FIRST
+    //return 0; /////// BUGGED FIX SEG FAULT FIRST
 
     // Allocating memory
     ham = malloc(NB_THREADS*sizeof(pthread_t));
