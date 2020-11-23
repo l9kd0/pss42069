@@ -2,15 +2,24 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <pthread.h>
+#if defined(TAS)
+  #include "../tas/lock.h"
+#elif defined(TATAS)
+  #include "../tatas/lock.h"
+#else
+  void lock(pthread_mutex_t *a){pthread_mutex_lock(a);}
+  void unlock(pthread_mutex_t *a){pthread_mutex_unlock(a);}
+#endif
 
 // Variables
-pthread_mutex_t *baguettes;
+#if defined(TAS) || defined(TATAS)
+  int *baguettes;
+#else
+  pthread_mutex_t *baguettes;
+#endif
+
 pthread_t *philosophers;
 int nb_philo = 3;
-
-// Declaring functions
-void lock(pthread_mutex_t *a) { pthread_mutex_lock(a); }
-void unlock(pthread_mutex_t *a) { pthread_mutex_unlock(a); }
 
 // Eat and think
 void *eat_and_think(void *pos)
@@ -42,7 +51,6 @@ void *eat_and_think(void *pos)
       lock(&baguettes[(seat + 1) % nb_philo]);
       lock(&baguettes[seat]);
     }
-
     // EATS
     unlock(&baguettes[(seat + 1) % nb_philo]);
     unlock(&baguettes[seat]);
@@ -64,7 +72,11 @@ int main(int argc, char **argv)
   //printf("Running with %d philosophers.\n",nb_philo); // DEBUG
 
   // Allocating memory
-  baguettes = malloc(nb_philo * sizeof(pthread_mutex_t));
+  #if defined(TAS) || defined(TATAS)
+    baguettes = malloc(nb_philo * sizeof(int));
+  #else
+    baguettes = malloc(nb_philo * sizeof(pthread_mutex_t));
+  #endif
   philosophers = malloc(nb_philo * sizeof(pthread_t));
 
   // Creating threads

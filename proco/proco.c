@@ -4,33 +4,45 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <unistd.h>
-#define BUFSIZE 12
+#define BUFSIZE 8
 
-int BUF[BUFSIZE]={0,0,0,0,0,0,0,0,0,0,0,0};
+#if defined(TAS)
+  #include "../tas/lock.h"
+#elif defined(TATAS)
+  #include "../tatas/lock.h"
+#else
+  void lock(pthread_mutex_t *a){pthread_mutex_lock(a);}
+  void unlock(pthread_mutex_t *a){pthread_mutex_unlock(a);}
+  void wait(sem_t *a){sem_wait(a);}
+  void post(sem_t *a){sem_post(a);}
+#endif
+
+int BUF[BUFSIZE]={0,0,0,0,0,0,0,0};
 int ctr_c=0,ctr_p=0;
 int nb_pro=8, nb_con=8;
-pthread_mutex_t ctr_m_p, ctr_m_c;
 pthread_t*pro;
 pthread_t*con;
 
-sem_t can_consume;
-sem_t can_produce;
 
-void lock(pthread_mutex_t *a){pthread_mutex_lock(a);}
-void unlock(pthread_mutex_t *a){pthread_mutex_unlock(a);}
+#if defined(TAS) || defined(TATAS)
+  volatile int ctr_m_p, ctr_m_c;
+  volatile struct my_sem_t can_consume,can_produce;
+#else
+  pthread_mutex_t ctr_m_p, ctr_m_c;
+  sem_t can_consume, can_produce;
+#endif
+
 
 void* consume(void *m){
   int a = *((int*)m);
 
   for(int i=0;i<a;i++){
     int cell;
-
-    sem_wait(&can_consume);
+    wait(&can_consume);
     lock(&ctr_m_c);
       cell=ctr_c++;
-
       BUF[cell%BUFSIZE]=0;
-      sem_post(&can_produce);
+      post(&can_produce);
     unlock(&ctr_m_c);
     while(rand() > RAND_MAX/10000);
   }
@@ -44,20 +56,19 @@ void* produce(void *m){
 
   for(int i=0;i<a;i++){
     int cell;
-
-    sem_wait(&can_produce);
+    wait(&can_produce);
     while(rand() > RAND_MAX/10000);
-
     lock(&ctr_m_p);
+
       cell=ctr_p++;
 
-      //if(BUF[cell%8]!=0)printf("WARN-collision occured.");
+      //if(BUF[cell%BUFSIZE]!=0)printf("WARN-collision occured. %d\n",cell);
       BUF[cell%BUFSIZE]=rand();
-      sem_post(&can_consume);
+      post(&can_consume);
+
     unlock(&ctr_m_p);
 
   }
-
   return NULL;
 }
 
@@ -75,8 +86,13 @@ int main(int argc, char **argv){
   pro = malloc(nb_pro*sizeof(pthread_t));
   con = malloc(nb_con*sizeof(pthread_t));
 
-  sem_init(&can_produce, 0 , 8);
-  sem_init(&can_consume, 0 , 0);
+  #if defined(TAS) || defined(TATAS)
+    my_sem_init(&can_produce,8);
+    my_sem_init(&can_consume,0);
+  #else
+    sem_init(&can_produce, 0 , 8);
+    sem_init(&can_consume, 0 , 0);
+  #endif
 
   for(int i=0;i<nb_pro;i++){
     int *k = malloc(sizeof(int));

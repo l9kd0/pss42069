@@ -16,16 +16,17 @@
 // Number of threads
 int NB_THREADS = 0;
 pthread_t* ham;
+volatile int lk=0;
 
 // Make some pizza
 void* mcdonald(){
 
     for(int i = 0; i < NBSC / NB_THREADS; i++){
-        lock(); // Locking
+        lock(&lk); // Locking
 
         while(rand() > RAND_MAX/10000);
 
-        unlock();
+        unlock(&lk);
 
     }
 

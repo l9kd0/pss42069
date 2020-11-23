@@ -2,94 +2,99 @@
 TIMEFORMAT='%3R';
 N=16
 
-#########################
-# philosophers
-#########################
 
-echo "N,t1,t2,t3,t4,t5" > philosophers.csv
-
-for i in $(seq 1 $N)
+for postfix in "" _tas _tatas
 do
-  echo -n $i >> philosophers.csv
-  for k in {1..5}
+  #########################
+  # philosophers
+  #########################
+
+  echo "N,t1,t2,t3,t4,t5" > ./data/philosophers${postfix}.csv
+
+  for i in $(seq 1 $N)
   do
-    VAR=$( { time ./philosophy/philosophy -N $i; } 2>&1 )
-    echo -n ","${VAR} >> philosophers.csv
+    echo -n $i >> ./data/philosophers${postfix}.csv
+    for k in {1..5}
+    do
+      VAR=$( { time ./philosophy/philosophy${postfix} -N $i; } 2>&1 )
+      echo -n ","${VAR} >> ./data/philosophers${postfix}.csv
+    done
+    echo "">>./data/philosophers${postfix}.csv
   done
-  echo "">>philosophers.csv
+
+  #########################
+  # producers-consumers
+  #########################
+
+  echo "N,t1,t2,t3,t4,t5" > ./data/proco${postfix}.csv
+
+  for i in $(seq 1 $N)
+  do
+    echo -n $i >> ./data/proco${postfix}.csv
+    P=$(($i/2))
+    C=$(($i/2+$i%2))
+    for k in {1..5}
+    do
+      VAR=$( { time ./proco/proco${postfix} -P $P -C $C; } 2>&1 )
+      echo -n ","${VAR} >> ./data/proco${postfix}.csv
+    done
+    echo "">>./data/proco${postfix}.csv
+  done
+
+
+  #########################
+  # readers-writers
+  #########################
+
+  echo "N,t1,t2,t3,t4,t5" > ./data/reawri${postfix}.csv
+
+  for i in $(seq 1 $N)
+  do
+    echo -n $i >> reawri${postfix}.csv
+    P=$(($i/2))
+    C=$(($i/2+$i%2))
+    for k in {1..5}
+    do
+      VAR=$( { time ./reawri/reawri${postfix} -W $P -R $C;} 2>&1 )
+      echo -n ","${VAR} >> reawri${postfix}.csv
+    done
+    echo "">>./data/reawri${postfix}.csv
+  done
 done
 
-#########################
-# producers-consumers
-#########################
 
-echo "N,t1,t2,t3,t4,t5" > proco.csv
+  #########################
+  # Pizzaoilo (test-and-set)
+  #########################
 
-for i in $(seq 1 $N)
-do
-  echo -n $i >> proco.csv
-  P=$(($i/2))
-  C=$(($i/2+$i%2))
-  for k in {1..5}
+  echo "N,t1,t2,t3,t4,t5" > testandset.csv
+
+  for i in $(seq 1 $N)
   do
-    VAR=$( { time ./proco/proco -P $P -C $C; } 2>&1 )
-    echo -n ","${VAR} >> proco.csv
+    echo -n $i >> testandset.csv
+    P=$(($i/2))
+    for k in {1..5}
+    do
+      VAR=$( { time ./testandset/testandset -P $P } 2>&1 )
+      echo -n ","${VAR} >> testandset.csv
+    done
+    echo "">>testandset.csv
   done
-  echo "">>proco.csv
-done
 
+  #########################
+  # Hamburgers (test-and-test-and-set)
+  #########################
 
-#########################
-# readers-writers
-#########################
+  echo "N,t1,t2,t3,t4,t5" > tatas.csv
 
-echo "N,t1,t2,t3,t4,t5" > reawri.csv
-
-for i in $(seq 1 $N)
-do
-  echo -n $i >> reawri.csv
-  P=$(($i/2))
-  C=$(($i/2+$i%2))
-  for k in {1..5}
+  for i in $(seq 1 $N)
   do
-    VAR=$( { time ./reawri/reawri -W $P -R $C;} 2>&1 )
-    echo -n ","${VAR} >> reawri.csv
+    echo -n $i >> tatas.csv
+    P=$(($i/2))
+    for k in {1..5}
+    do
+      VAR=$( { time ./tatas/tatas -P $P } 2>&1 )
+      echo -n ","${VAR} >> tatas.csv
+    done
+    echo "">>tatas.csv
   done
-  echo "">>reawri.csv
-done
-
-#########################
-# Pizzaoilo (test-and-set)
-#########################
-
-echo "N,t1,t2,t3,t4,t5" > testandset.csv
-
-for i in $(seq 1 $N)
-do
-  echo -n $i >> testandset.csv
-  P=$(($i/2))
-  for k in {1..5}
-  do
-    VAR=$( { time ./testandset/testandset -P $P } 2>&1 )
-    echo -n ","${VAR} >> testandset.csv
-  done
-  echo "">>testandset.csv
-done
-
-#########################
-# Hamburgers (test-and-test-and-set)
-#########################
-
-echo "N,t1,t2,t3,t4,t5" > tatas.csv
-
-for i in $(seq 1 $N)
-do
-  echo -n $i >> tatas.csv
-  P=$(($i/2))
-  for k in {1..5}
-  do
-    VAR=$( { time ./tatas/tatas -P $P } 2>&1 )
-    echo -n ","${VAR} >> tatas.csv
-  done
-  echo "">>tatas.csv
-done

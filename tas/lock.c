@@ -1,31 +1,24 @@
 #include "lock.h"
 #include <stdio.h>
+
 void lock(volatile int*lock_m) {
 
-    // Try test and set
-    while(test_and_set(lock_m)) {
+    // Getting result of test and lock
+    int res = 0;
 
-        // Wait until lock_m is 0
-        while (*lock_m) {}
-    }
+    do{
 
-    // Now free to execute -->
+      // Calling testandlock
+      asm ("movl $1, %0\n"
+          "xchgl %0, (%1)\n"
+          :"=a"(res)
+          :"b" (lock_m)
+      );
+
+      // If res not 0 (not free) attempt again
+    }while(res != 0);
 
     return;
-}
-
-int test_and_set(volatile int*lock_m) {
-
-    int res;
-
-    // Calling testandlock
-    asm ("movl $1, %0\n"
-        "xchgl %0, (%1)\n"
-        :"=a"(res)
-        :"b" (lock_m)
-    );
-
-    return res;
 }
 
 void unlock(volatile int*lock_m) {
@@ -41,6 +34,8 @@ void unlock(volatile int*lock_m) {
 }
 
 void wait(volatile struct my_sem_t*sem_m){
+
+  // protecting semaphore counter
   lock(&(sem_m->sem_lock));
     while((sem_m->count<=0));
     (sem_m->count)--;

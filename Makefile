@@ -2,6 +2,8 @@ default:
 	make -C ./philosophy
 	make -C ./proco
 	make -C ./reawri
+	make -C ./tatas
+	make -C ./tas
 
 remake:
 	make -C ./philosophy remake
@@ -12,8 +14,10 @@ clean:
 	make -C ./philosophy clean
 	make -C ./proco clean
 	make -C ./reawri clean
-	rm -f *.png
-	rm -f *.csv
+	make -C ./tatas clean
+	make -C ./tas clean
+	rm -f ./graphs/*.png
+	rm -f ./data/*.csv
 
 analysis: default
 	./analysis.sh

@@ -2,24 +2,24 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <pthread.h>
-#include <math.h>
 #include <stdio.h>
 
 #define NBSC 6400 // Defining total number of "sections critiques"
 
 // Number of threads
 int NB_THREADS = 0;
-pthread_t* bar;
+pthread_t* piz;
+volatile int lk=0;
 
-// Make some beer
-void* barman(){
+// Make some pizza
+void* pizzaiolo(){
 
-    for(int i = 0; i < floor(NBSC / NB_THREADS); i++){
-        lock(); // Locking 
-
+    for(int i = 0; i < NBSC / NB_THREADS; i++){
+        int a=rand();
+        lock(&lk); // Locking
         while(rand() > RAND_MAX/10000);
 
-        unlock();
+        unlock(&lk);
 
     }
 
@@ -34,25 +34,30 @@ int main(int argc, char **argv){
         if(opt=='P')NB_THREADS=atoi(optarg);
     }
 
-    // Debug
-    printf("Making %d beers with %d barmen.\n", NBSC, NB_THREADS);
+    struct my_sem_t a;
 
-    //printf("debug %d", test_and_set());
-    //unlock();
+    my_sem_init(&a,1);
 
-    return 0; /////// BUGGED FIX SEG FAULT FIRST
+    post(&a);
+    post(&a);
+
+    wait(&a);
+    wait(&a);
+    wait(&a);
+    printf("Not happening.\n");
+    return 0;
 
     // Allocating memory
-    bar = malloc(NB_THREADS*sizeof(pthread_t));
+    piz = malloc(NB_THREADS*sizeof(pthread_t));
 
     // Creating threads
     for(int i=0;i<NB_THREADS;i++){
-        pthread_create(bar+i,NULL,&barman,NULL);
+        pthread_create(piz+i,NULL,&pizzaiolo,NULL);
     }
 
     // Joining threads
     for(int i=0;i<NB_THREADS;i++){
-        pthread_join(bar[i],NULL);
+        pthread_join(piz[i],NULL);
     }
 
     return 0;

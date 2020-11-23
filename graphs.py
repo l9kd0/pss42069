@@ -12,5 +12,5 @@ for i in range(len(files)):
     plt.xlabel("Nombre de threads");
     plt.ylabel("Temps écoulé [s]");
     #plt.show()
-    plt.savefig(files[i]+'.png', bbox_inches='tight')
+    plt.savefig('./graphs/'+files[i]+'.png', bbox_inches='tight')
     plt.close()

@@ -4,13 +4,31 @@
 #include <semaphore.h>
 #include <stdio.h>
 
-void lock(pthread_mutex_t *a){pthread_mutex_lock(a);}
-void unlock(pthread_mutex_t *a){pthread_mutex_unlock(a);}
-void wait(sem_t *a){sem_wait(a);}
-void post(sem_t *a){sem_post(a);}
+#if defined(TAS)
 
-pthread_mutex_t wc,rc,z;
-sem_t data, green;
+  #include "../tas/lock.h"
+
+#elif defined(TATAS)
+
+  #include "../tatas/lock.h"
+
+#else
+
+  void lock(pthread_mutex_t *a){pthread_mutex_lock(a);}
+  void unlock(pthread_mutex_t *a){pthread_mutex_unlock(a);}
+  void wait(sem_t *a){sem_wait(a);}
+  void post(sem_t *a){sem_post(a);}
+
+#endif
+
+#if defined(TAS) || defined(TATAS)
+  volatile int wc,rc,z;
+  volatile struct my_sem_t data,green;
+#else
+  pthread_mutex_t wc,rc,z;
+  sem_t data, green;
+#endif
+
 int nbr=0,nbw=0,r_threads,w_threads;
 
 pthread_t *r,*w;
@@ -70,8 +88,13 @@ int main(int argc, char **argv){
   r = (pthread_t*)malloc(r_threads*sizeof(pthread_t));
   w = (pthread_t*)malloc(w_threads*sizeof(pthread_t));
 
-  sem_init(&data, 0 , 1);
-  sem_init(&green, 0 , 1);
+  #if defined(TAS) || defined(TATAS)
+    my_sem_init(&green,1);
+    my_sem_init(&data,1);
+  #else
+    sem_init(&data, 0 , 1);
+    sem_init(&green, 0 , 1);
+  #endif
 
   for(int i=0;i<w_threads;i++){
 
