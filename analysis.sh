@@ -33,7 +33,7 @@ do
 
     echo "N,t1,t2,t3,t4,t5" > ./data/proco${postfix}.csv
 
-    for i in $(seq 1 $N)
+    for i in $(seq 2 $N)
     do
       echo -n $i >> ./data/proco${postfix}.csv
       P=$(($i/2))
@@ -54,7 +54,7 @@ do
 
     echo "N,t1,t2,t3,t4,t5" > ./data/reawri${postfix}.csv
 
-    for i in $(seq 1 $N)
+    for i in $(seq 2 $N)
     do
       echo -n $i >> reawri${postfix}.csv
       P=$(($i/2))
@@ -62,7 +62,7 @@ do
       for k in {1..5}
       do
         VAR=$( { time ./reawri/reawri${postfix} -W $P -R $C;} 2>&1 )
-        echo -n ","${VAR} >> reawri${postfix}.csv
+        echo -n ","${VAR} >> ./data/reawri${postfix}.csv
       done
       echo "">>./data/reawri${postfix}.csv
     done
