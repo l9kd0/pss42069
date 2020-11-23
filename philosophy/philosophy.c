@@ -27,7 +27,7 @@ void *eat_and_think(void *pos)
   int seat = *((int *)pos);
 
 
-  for (int i = 0; i < 10000; i++)
+  for (int i = 0; i < 100000; i++)
   {
 
     // Checking if alone
