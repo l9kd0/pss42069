@@ -22,6 +22,7 @@ clean:
 full_analysis: default
 	./analysis.sh philosophy
 	./analysis.sh tatas
+	./analysis.sh btatas
 	./analysis.sh tas
 	./analysis.sh reawri
 	./analysis.sh proco
