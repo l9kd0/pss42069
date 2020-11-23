@@ -109,3 +109,23 @@ done
     echo "">>./data/tatas.csv
   done
   fi
+
+  if [ "$1" == "btatas" ]; then
+  #########################
+  # Hamburgers (test-and-test-and-set)
+  #########################
+
+  echo "N,t1,t2,t3,t4,t5" > ./data/btatas.csv
+
+  for i in $(seq 1 $N)
+  do
+    echo -n $i >> ./data/btatas.csv
+    P=$(($i/2))
+    for k in {1..5}
+    do
+      VAR=$( { time ./tatas/btatas -P $P ;} 2>&1 )
+      echo -n ","${VAR} >> ./data/btatas.csv
+    done
+    echo "">>./data/btatas.csv
+  done
+  fi
