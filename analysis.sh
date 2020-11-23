@@ -56,7 +56,7 @@ do
 
     for i in $(seq 2 $N)
     do
-      echo -n $i >> reawri${postfix}.csv
+      echo -n $i >> ./data/reawri${postfix}.csv
       P=$(($i/2))
       C=$(($i/2+$i%2))
       for k in {1..5}

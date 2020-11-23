@@ -34,19 +34,6 @@ int main(int argc, char **argv){
         if(opt=='P')NB_THREADS=atoi(optarg);
     }
 
-    struct my_sem_t a;
-
-    my_sem_init(&a,1);
-
-    post(&a);
-    post(&a);
-
-    wait(&a);
-    wait(&a);
-    wait(&a);
-    printf("Not happening.\n");
-    return 0;
-
     // Allocating memory
     piz = malloc(NB_THREADS*sizeof(pthread_t));
 
