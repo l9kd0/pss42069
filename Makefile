@@ -19,8 +19,12 @@ clean:
 	rm -f ./graphs/*.png
 	rm -f ./data/*.csv
 
-analysis: default
-	./analysis.sh
+full_analysis: default
+	./analysis.sh philosophy
+	./analysis.sh tatas
+	./analysis.sh tas
+	./analysis.sh reawri
+	./analysis.sh proco
 
 graphs: analysis
 	python3 graphs.py

@@ -3,4 +3,5 @@ default:
 	gcc -pthread -std=gnu99 -D BACKOFF -o btatas tatas.c b_lock.c
 clean:
 	rm -f tatas
+	rm -f btatas
 remake: clean default
