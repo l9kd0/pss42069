@@ -13,7 +13,7 @@ for i in range(len(files)):
     tab[1]=pd.read_csv("./data/"+files[i]+"_tas.csv").values
     tab[2]=pd.read_csv("./data/"+files[i]+"_tatas.csv").values
     c = ["orange","lightblue","lightgreen"]
-    label = ["Classique","TAS","TATAS"]
+    label = ["POSIX","TAS","TATAS"]
 
     ######## Boxplots
     box=[]
