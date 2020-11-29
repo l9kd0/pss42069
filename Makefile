@@ -26,8 +26,8 @@ full_analysis: default
 	./analysis.sh tas
 	./analysis.sh reawri
 	./analysis.sh proco
-	
+
 test: full_analysis
 
-graphs: analysis
+graphs: full_analysis
 	python3 graphs.py
