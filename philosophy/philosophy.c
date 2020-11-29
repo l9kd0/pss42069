@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <pthread.h>
+
+// Choosing lock implementation according to compiler arguments
 #if defined(TAS)
   #include "../tas/lock.h"
 #elif defined(TATAS)

@@ -6,6 +6,7 @@
 #include <unistd.h>
 #define BUFSIZE 8
 
+// Choosing lock implementation according to compiler arguments
 #if defined(TAS)
   #include "../tas/lock.h"
 #elif defined(TATAS)
@@ -18,12 +19,13 @@
 #endif
 
 int BUF[BUFSIZE]={0,0,0,0,0,0,0,0};
-int ctr_c=0,ctr_p=0;
+// ctr_p next index to produce, ctr_c next index to consume in buffer
+int ctr_c=0,ctr_p=0; // Specific counters for consumers and producers
 int nb_pro=8, nb_con=8;
 pthread_t*pro;
 pthread_t*con;
 
-
+// Required semaphores and mutexes
 #if defined(TAS) || defined(TATAS)
   volatile int ctr_m_p, ctr_m_c;
   volatile struct my_sem_t can_consume,can_produce;
@@ -38,13 +40,13 @@ void* consume(void *m){
 
   for(int i=0;i<a;i++){
     int cell;
-    wait(&can_consume);
-    lock(&ctr_m_c);
+    wait(&can_consume); // Waiting for a new value
+    lock(&ctr_m_c); // Locking the consumer counter
       cell=ctr_c++;
-      BUF[cell%BUFSIZE]=0;
-      post(&can_produce);
+      BUF[cell%BUFSIZE]=0; // Array access
+      post(&can_produce); // Value is retrieved, may now be erased
     unlock(&ctr_m_c);
-    while(rand() > RAND_MAX/10000);
+    while(rand() > RAND_MAX/10000); // Value is consumed
   }
 
   return NULL;
@@ -56,15 +58,15 @@ void* produce(void *m){
 
   for(int i=0;i<a;i++){
     int cell;
-    wait(&can_produce);
-    while(rand() > RAND_MAX/10000);
+    while(rand() > RAND_MAX/10000); // Simulate new value creation
+    wait(&can_produce); // Wait for free space or new erasable values
     lock(&ctr_m_p);
 
       cell=ctr_p++;
 
       //if(BUF[cell%BUFSIZE]!=0)printf("WARN-collision occured. %d\n",cell);
-      BUF[cell%BUFSIZE]=rand();
-      post(&can_consume);
+      BUF[cell%BUFSIZE]=rand(); // Simulate array access
+      post(&can_consume); // Value now available for consumption
 
     unlock(&ctr_m_p);
 
