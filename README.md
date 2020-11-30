@@ -2,7 +2,19 @@
 This repository holds all source files used in the first project for course LINFO1252.
 
 # How to run
-Compile everything using `make` then `make test` to run all the tests. Once it's done, you can use `make graphs` to run the python scripts in order to generate the graphs.
+Some of the following commands also work in sub directories. (e.g. `make`)
 
-# Output
-All the graphs are stored inside the `graphs/` folder with the `.png` format. Raw CSV files are stored inside the `data` folder.
+
+## Compile
+- `make` : creates executables in all subdirectories.
+
+- `make clean` : deletes all executables, images and csv files in sub directories.
+
+- `make remake` : runs a make clean then a make in the philosophy, proco and reawri directories.
+
+## Analysis
+ - `make test` : runs all tests and generates data in the /data/ folder. **It may take a while**.
+
+ - `./analysis.sh [proco/philosophy/tatas/btatas/reawri/tas]` : runs specifics tests for the provided target, generates related csv files.
+
+ - `python3 graphs.py` : plots graphs only if the data/ folder is filled with full testing data. The .png format is used.
