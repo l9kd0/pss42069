@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import os
+if not os.path.exists('graphs'):
+    os.makedirs('graphs')
 
 files = ["philosophers","proco","reawri"]
 titles = ["Problème des philosophes","Système producteurs-consommateurs","Problème des lecteurs et écrivains"]

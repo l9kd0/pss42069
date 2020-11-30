@@ -3,6 +3,8 @@
 TIMEFORMAT='%3R';
 N=16
 
+mkdir -p data
+
 if [ "$1" == "" ]; then
   echo "Please specify a target."
   echo "Valid targets are 'philosophy', 'proco', 'reawri', 'tas', 'tatas', 'btatas'"
